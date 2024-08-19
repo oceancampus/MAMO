@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAMO - Marine Biodiversity Monitoring</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        /* 커스텀 스타일 */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #0077b6, #00b4d8);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            background-image: url('https://cdn.pixabay.com/photo/2016/11/29/09/15/ocean-1867285_1280.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        header {
+            background-color: rgba(0, 119, 182, 0.85);
+            color: #f0f4f8;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            flex-direction: column;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+        h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin-top: 0;
+        }
+        nav {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        nav a {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f0f4f8;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.3s;
+            background-color: rgba(144, 224, 239, 0.2);
+        }
+        nav a:hover {
+            background-color: #90e0ef;
+            transform: translateY(-3px);
+        }
+        .main-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 160px; /* 헤더 아래에 더 넓은 공간 추가 */
+            padding: 20px;
+            width: 100%;
+            max-width: 1200px;
+            backdrop-filter: blur(10px);
+        }
+        #map {
+            height: 70vh;
+            width: 45vw;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        .info-panel {
+            width: 45vw;
+            height: 70vh;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.85);
+            color: #333;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+        .info-panel h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #0077b6;
+        }
+        .info-panel p {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+        .info-panel img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        footer {
+            background-color: rgba(0, 119, 182, 0.85);
+            color: #f0f4f8;
+            text-align: center;
+            padding: 1rem;
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 12px;
+            position: relative;
+            bottom: 0;
+            backdrop-filter: blur(10px);
+        }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .social-links img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .social-links img:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+     <!-- 헤더 -->
+    <header>
+        <h1>MAMO</h1>
+        <h2>MARINE BIODIVERSITY MONITORING</h2>
+        <nav>
+            <a href="https://www.instagram.com/oceancampus_2019/" target="_blank">탐험</a>
+            <a href="https://www.instagram.com/oceancampus_2019/" target="_blank">기여</a>
+            <a href="https://www.instagram.com/oceancampus_2019/" target="_blank">소개</a>
+        </nav>
+        
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="main-content">
+        <!-- 지도 -->
+        <div id="map" class="bg-gray-300"></div>
+
+        <!-- 정보 패널 -->
+        <div class="info-panel">
+            <h2>해양 생물 정보</h2>
+            
+            <div id="info-content">
+                <p style="font-size: 1.rem; font-weight: bold; text-align: center; color: #0077b6;">왼쪽 지도의 마커를 클릭해주세요.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 소셜 링크 -->
+    <div class="social-links">
+        <a href="https://www.instagram.com/oceancampus_2019" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram">
+        </a>
+        <a href="https://www.youtube.com/channel/UC4JX40jDee_tINbkjycV4Sg" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube">
+        </a>
+    </div>
+
+    <!-- 푸터 -->
+    <footer>
+        <p>&copy; 2024 MAMO. All rights reserved.</p>
+    </footer>
+
+    <!-- Leaflet.js 스크립트 -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // 각 마커에 대해 서로 다른 날짜를 설정
+        const dates = [
+            '2024-05-10',
+            '2024-05-26',
+            '2024-06-01',
+            '2024-06-23',
+            '2024-07-14',
+            '2024-08-11',
+            '2024-08-16'
+        ];
+
+        // 각 마커에 대해 서로 다른 이미지 URL 설정
+        const images = [
+            "https://source.unsplash.com/1600x900/?jellyfish,marine",
+            "https://source.unsplash.com/1600x900/?ocean,marine",
+            "https://source.unsplash.com/1600x900/?sea,marine",
+            "https://source.unsplash.com/1600x900/?underwater,marine",
+            "https://source.unsplash.com/1600x900/?fish,marine",
+        ];
+
+        // 지도 초기화
+        var map = L.map('map').setView([36.5, 127.5], 6); // 동해 쪽 바다를 중심으로 초기 위치 설정
+
+        // 타일 레이어 추가 (OpenStreetMap 사용)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 정보 패널 업데이트 함수
+        function updateInfoPanel(title, date, temp, depth, surfaceTemp, depth10mTemp, depth20mTemp, latLng, species, imageUrl) {
+            const infoContent = `
+                <h3>${title}</h3>
+                <img src="${imageUrl}" alt="Marine Image">
+                <p><strong>발견 날짜:</strong> ${date}</p>
+                <p><strong>기온:</strong> ${temp}</p>
+                <p><strong>발견 수심:</strong> ${depth}</p>
+                <p><strong>표층 수온:</strong> ${surfaceTemp}</p>
+                <p><strong>수심 10m 수온:</strong> ${depth10mTemp}</p>
+                <p><strong>수심 20m 수온:</strong> ${depth20mTemp}</p>
+                <p><strong>위치:</strong> ${latLng[0].toFixed(4)}, ${latLng[1].toFixed(4)}</p>
+                <p><strong>종류:</strong> ${species}</p>
+            `;
+            document.getElementById('info-content').innerHTML = infoContent;
+        }
+
+        // 첫 번째 해파리 발견 위치에 마커 추가 (울릉도와 동해시 중간)
+        var jellyfishLatLng1 = [37.65, 130.9];
+        var marker1 = L.marker(jellyfishLatLng1).addTo(map)
+            .on('click', function() {
+                updateInfoPanel(
+                    '해양유해생물 발견 지점',
+                    dates[0],
+                    '32°C',
+                    '13m',
+                    '28°C',
+                    '24°C',
+                    '13°C',
+                    jellyfishLatLng1,
+                    '노무라입깃해파리',
+                    'https://search.pstatic.net/common/?src=http%3A%2F%2Fimgnews.naver.net%2Fimage%2F5194%2F2012%2F07%2F31%2F17465_61039_1621.jpg&type=sc960_832'
+                );
+            });
+
+        // 두 번째 해파리 발견 위치에 마커 추가 (포항시 옆 바다)
+        var jellyfishLatLng2 = [36.03, 129.57];
+        var marker2 = L.marker(jellyfishLatLng2).addTo(map)
+            .on('click', function() {
+                updateInfoPanel(
+                    '해양유해생물 발견지점',
+                    dates[1],
+                    '31°C',
+                    '15m',
+                    '27°C',
+                    '23°C',
+                    '14°C',
+                    jellyfishLatLng2,
+                    '파란고리문어 (Blue-ringed octopus)',
+                    'https://i.namu.wiki/i/kupqDNehkO6k-yIrFmAezBfUVFuixAV1eAjP8bPre4aoNJ5YjWBkXHwEr2XWcuiiDPS21UNYfKl9qMm3ohO50o6T3F2VkajkCa4_Z8RaS3XKWji1OUfbIVdfsOG4m0dggEvvLiWJ2-L7Okp5CQhfdw.webp'
+                );
+            });
+            var jellyfishLatLng3 = [34.04, 128.57];
+        var marker2 = L.marker(jellyfishLatLng2).addTo(map)
+            .on('click', function() {
+                updateInfoPanel(
+                    '해양유해생물 발견지점',
+                    dates[1],
+                    '25°C',
+                    '16m',
+                    '22°C',
+                    '23°C',
+                    '1°C',
+                    jellyfishLatLng2,
+                    '파란고리문어 (Blue-ringed octopus)',
+                    'https://i.namu.wiki/i/kupqDNehkO6k-yIrFmAezBfUVFuixAV1eAjP8bPre4aoNJ5YjWBkXHwEr2XWcuiiDPS21UNYfKl9qMm3ohO50o6T3F2VkajkCa4_Z8RaS3XKWji1OUfbIVdfsOG4m0dggEvvLiWJ2-L7Okp5CQhfdw.webp'
+                );
+            });
+        // 추가적인 3개의 마커 추가 (대한민국 육지에서 50km 떨어진 바다)
+        var additionalMarkers = [
+    { 
+        latLng: [34.4, 128.2], 
+        title: "해양유해생물 발견지점", 
+        temp: "30°C", 
+        depth: "12m", 
+        surfaceTemp: "26°C", 
+        depth10mTemp: "24°C", 
+        depth20mTemp: "22°C", 
+        species: "보름달물해파리 (Moon jellyfish)", 
+        date: dates[3], 
+        image: 'https://i.namu.wiki/i/BTP8aXVQbrPxSfi52nCS3L2rvrb55deMqTI2XuriiFQ__aJDS7hQ8KV8Xu5VMQJDN39H4KnH81YT9F-EL1eTg93kF0If5F0TTLBa1l3vXecf0oHdZidCa-6Wzn6HWo5Jwsobgdc7XqdXxQ8BjI6WGA.webp'
+    }, 
+    { 
+        latLng: [35.1, 129.4], 
+        title: "해양유해생물 발견지점", 
+        temp: "32°C", 
+        depth: "15m", 
+        surfaceTemp: "28°C", 
+        depth10mTemp: "26°C", 
+        depth20mTemp: "24°C", 
+        species: "유령멍게 (Ciona)", 
+        date: dates[4], 
+        image: 'https://imgnews.pstatic.net/image/056/2021/09/07/0011115956_002_20210907144808132.jpg?type=w647IMAGE_URL_4' // 여기에 네 번째 이미지의 URL을 넣으세요 
+    }, 
+    { 
+        latLng: [37.9, 129.7], 
+        title: "해양유해생물 발견지점", 
+        temp: "27°C", 
+        depth: "8m", 
+        surfaceTemp: "26°C", 
+        depth10mTemp: "24°C", 
+        depth20mTemp: "22°C", 
+        species: "아무르불가사리 (North Pacific seastar)", 
+        date: dates[6], 
+        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/%E6%B5%B7%E6%98%9F%EF%BC%88%E6%AD%A3%E9%9D%A2%EF%BC%89.JPG/300px-%E6%B5%B7%E6%98%9F%EF%BC%88%E6%AD%A3%E9%9D%A2%EF%BC%89.JPG' // 여기에 다섯 번째 이미지의 URL을 넣으세요 
+    }
+];
+
+additionalMarkers.forEach(function(marker) {
+    L.marker(marker.latLng).addTo(map)
+        .on('click', function() {
+            updateInfoPanel(
+                marker.title,
+                marker.date,
+                marker.temp,
+                marker.depth,
+                marker.surfaceTemp,
+                marker.depth10mTemp,
+                marker.depth20mTemp,
+                marker.latLng,
+                marker.species,
+                marker.image
+            );
+        });
+});
+
+    </script>
+</body>
+</html>
